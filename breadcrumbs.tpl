@@ -197,10 +197,11 @@ $templateSet = (!isset($templateSet) ) ? 'defaultString' : $templateSet;
  * prefixed with defaultString, and defaultList. You can create as many more as
  * you like, each set with it's own prefix
  */
-$tpl = get_tpl($templateSet);
+$tpl = get_default_tpl($templateSet);
 if($templateSet !== 'defaultString' && $templateSet !== 'defaultList')
 {
-	$tpl = get_chunk_tpl($templateSet);
+	$chunk_tpl = get_chunk_tpl($templateSet);
+	$tpl = array_merge($tpl,$chunk_tpl);
 }
 
 if(isset($crumb))             $tpl['crumb']             = $crumb;
@@ -481,7 +482,7 @@ return $container;
 
 
 
-function get_tpl($templateSet)
+function get_default_tpl($templateSet)
 {
 	switch($templateSet)
 	{
