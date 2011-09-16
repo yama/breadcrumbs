@@ -2,14 +2,13 @@
 /**
  * Breadcrumbs
  *
- * Configurable breadcrumb page-trail navigation
+ * カスタマイズの自由度が高いパン屑リスト
  * 
  * @category	snippet
  * @version 	1.0.3
  * @license 	http://www.gnu.org/copyleft/gpl.html GNU Public License (GPL)
  * @internal	@properties
  * @internal	@modx_category Navigation
- * @internal    @installset base, sample
  */
 
 /*
