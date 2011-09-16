@@ -215,7 +215,7 @@ if(isset($firstCrumbWrapper)) $tpl['firstCrumbWrapper'] = $firstCrumbWrapper;
  */
 
 // Return blank if necessary: on home page
-if ( !$showCrumbsAtHome && $homeId == $modx->documentObject['id'] )
+if ( !$showCrumbsAtHome && $homeId == $modx->documentIdentifier )
 {
     return '';
 }
@@ -240,7 +240,7 @@ if ( $hideOn || $hideUnder )
         $hideOn = array_merge($hideOn,$hiddenKids);
     }
 
-    if ( in_array($modx->documentObject['id'],$hideOn) )
+    if ( in_array($modx->documentIdentifier,$hideOn) )
     {
         return '';
     }
@@ -278,7 +278,7 @@ $crumbGap = str_replace('||','=',$crumbGap);
 if ( $showCurrentCrumb )
 {
     $crumbs[] = array(
-        'id' => $modx->documentObject['id'],
+        'id' => $modx->documentIdentifier,
         'parent' => $modx->documentObject['parent'],
         'pagetitle' => $modx->documentObject['pagetitle'],
         'longtitle' => $modx->documentObject['longtitle'],
@@ -333,7 +333,7 @@ while ( $parent && $parent!=$modx->config['site_start'] && $loopSafety < 1000 )
 
 // Home crumb ------------------------------------------------------------------
 
-if ( $showHomeCrumb && $homeId != $modx->documentObject['id'] && $homeCrumb = $modx->getPageInfo($homeId,0,"id,parent,pagetitle,longtitle,menutitle,description,published,hidemenu") )
+if ( $showHomeCrumb && $homeId != $modx->documentIdentifier && $homeCrumb = $modx->getPageInfo($homeId,0,"id,parent,pagetitle,longtitle,menutitle,description,published,hidemenu") )
 {
     $crumbs[] = array(
     'id' => $homeCrumb['id'],
@@ -383,7 +383,7 @@ foreach ( $crumbs as $c )
     {
         $crumbClass = $stylePrefix.'homeCrumb';
     }
-    else if ( $modx->documentObject['id'] == $c['id'] )
+    else if ( $modx->documentIdentifier == $c['id'] )
     {
         $crumbClass = $stylePrefix.'currentCrumb';
     }
@@ -394,8 +394,8 @@ foreach ( $crumbs as $c )
 
     // Make link
     if (
-        ( $c['id'] != $modx->documentObject['id'] && $showCrumbsAsLinks ) ||
-        ( $c['id'] == $modx->documentObject['id'] && $currentAsLink )
+        ( $c['id'] != $modx->documentIdentifier && $showCrumbsAsLinks ) ||
+        ( $c['id'] == $modx->documentIdentifier && $currentAsLink )
     )
     {
         // Determine appropriate title for link: home link specified
