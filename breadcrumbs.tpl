@@ -204,11 +204,11 @@ if($templateSet !== 'defaultString' && $templateSet !== 'defaultList')
 	$tpl = array_merge($tpl,$chunk_tpl);
 }
 
-if(isset($crumb))             $tpl['crumb']             = $crumb;
-if(isset($separator))         $tpl['separator']         = $separator;
-if(isset($crumbContainer))    $tpl['crumbContainer']    = $crumbContainer;
-if(isset($lastCrumbWrapper))  $tpl['lastCrumbWrapper']  = $lastCrumbWrapper;
-if(isset($firstCrumbWrapper)) $tpl['firstCrumbWrapper'] = $firstCrumbWrapper;
+if(isset($crumb))             $tpl['crumb']             = fetch($crumb);
+if(isset($separator))         $tpl['separator']         = fetch($separator);
+if(isset($crumbContainer))    $tpl['crumbContainer']    = fetch($crumbContainerv);
+if(isset($lastCrumbWrapper))  $tpl['lastCrumbWrapper']  = fetch($lastCrumbWrapper);
+if(isset($firstCrumbWrapper)) $tpl['firstCrumbWrapper'] = fetch($firstCrumbWrapper);
 
 /* -----------------------------------------------------------------------------
  * END CONFIGURATION
@@ -484,9 +484,10 @@ return $container;
 
 function get_default_tpl($templateSet)
 {
+	$templateSet = strtolower($templateSet);
 	switch($templateSet)
 	{
-		case 'defaultList':
+		case 'defaultlist':
 		case 'list':
 		case 'li':
 		{
@@ -526,4 +527,31 @@ function get_chunk_tpl($templateSet)
 		}
 	}
 	return $tpl;
+}
+
+function fetch($value)
+{
+	global $modx;
+	$template = '';
+	
+	if(substr($value, 0, 5) == '@FILE')
+	{
+		$value = substr($value, 6);
+		$value = trim($value);
+		$value = MODX_BASE_PATH . ltrim($value,'/');
+		$template = file_get_contents($value);
+	}
+	elseif(substr($value, 0, 5) == '@CODE')
+	{
+		$template = substr($value, 6);
+	}
+	elseif($modx->getChunk($value) != '')
+	{
+		$template = $modx->getChunk($value);
+	}
+	else
+	{
+		$template = $value;
+	}
+	return $template;
 }
