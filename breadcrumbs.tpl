@@ -493,8 +493,8 @@ function get_default_tpl($templateSet)
 			$tpl['crumb']             = '<li>[+crumb+]</li>';
 			$tpl['separator']         = '';
 			$tpl['crumbContainer']    = '<ul class="[+crumbBoxClass+]">[+crumbs+]</ul>';
-			$tpl['lastCrumbWrapper']  = '<span class="[+lastCrumbClass+]">[+lastCrumbSpanA+]</span>';
 			$tpl['firstCrumbWrapper'] = '<span class="[+firstCrumbClass+]">[+firstCrumbSpanA+]</span>';
+			$tpl['lastCrumbWrapper']  = '<span class="[+lastCrumbClass+]">[+lastCrumbSpanA+]</span>';
 			break;
 		}
 		default:
@@ -502,8 +502,8 @@ function get_default_tpl($templateSet)
 			$tpl['crumb']             = '[+crumb+]';
 			$tpl['separator']         = ' &raquo; ';
 			$tpl['crumbContainer']    = '<span class="[+crumbBoxClass+]">[+crumbs+]</span>';
-			$tpl['lastCrumbWrapper']  = '<span class="[+lastCrumbClass+]">[+lastCrumbSpanA+]</span>';
 			$tpl['firstCrumbWrapper'] = '<span class="[+firstCrumbClass+]">[+firstCrumbSpanA+]</span>';
+			$tpl['lastCrumbWrapper']  = '<span class="[+lastCrumbClass+]">[+lastCrumbSpanA+]</span>';
 		}
 	}
 	return $tpl;
