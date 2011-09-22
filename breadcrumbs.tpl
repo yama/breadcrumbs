@@ -416,8 +416,13 @@ foreach ( $crumbs as $c )
             }
         }
 
-
-        $pretemplateCrumb .= '<a class="'.$crumbClass.'" href="'.($c['id'] == $modx->config['site_start'] ? $modx->config['base_url'] : $modx->makeUrl($c['id'])).'" title="'.$title.'">'.$text.'</a>';
+        is($c['id'] == $modx->config['site_start'])
+        {
+        	 $href = $modx->config['base_url'];
+        }
+        else $href = $modx->makeUrl($c['id']);
+        
+        $pretemplateCrumb .= '<a class="'.$crumbClass.'" href="' . $href . '" title="'.$title.'">'.$text.'</a>';
     }
     else
     // Make a span instead of a link
