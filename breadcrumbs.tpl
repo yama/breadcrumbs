@@ -218,53 +218,51 @@ if(isset($firstCrumbWrapper)) $tpl['firstCrumbWrapper'] = fetch($firstCrumbWrapp
 // Return blank if necessary: on home page
 if ( !$showCrumbsAtHome && $homeId == $modx->documentIdentifier )
 {
-    return '';
+	return '';
 }
 // Return blank if necessary: specified pages
 if ( $hideOn || $hideUnder )
 {
-    // Create array of hide pages
-    $hideOn = str_replace(' ','',$hideOn);
-    $hideOn = explode(',',$hideOn);
-
-    // Get more hide pages based on parents if needed
-    if ( $hideUnder )
-    {
-        $hiddenKids = array();
-        // Get child pages to hide
-        $hideKidsQuery = $modx->db->select('id',$modx->getFullTableName("site_content"),"parent IN ($hideUnder)");
-        while ( $hideKid = $modx->db->getRow($hideKidsQuery) )
-        {
-            $hiddenKids[] = $hideKid['id'];
-        }
-        // Merge with hideOn pages
-        $hideOn = array_merge($hideOn,$hiddenKids);
-    }
-
-    if ( in_array($modx->documentIdentifier,$hideOn) )
-    {
-        return '';
-    }
-
+	// Create array of hide pages
+	$hideOn = str_replace(' ','',$hideOn);
+	$hideOn = explode(',',$hideOn);
+	
+	// Get more hide pages based on parents if needed
+	if ( $hideUnder )
+	{
+		$hiddenKids = array();
+		// Get child pages to hide
+		$hideKidsQuery = $modx->db->select('id',$modx->getFullTableName("site_content"),"parent IN ($hideUnder)");
+		while ( $hideKid = $modx->db->getRow($hideKidsQuery) )
+		{
+			$hiddenKids[] = $hideKid['id'];
+		}
+		// Merge with hideOn pages
+		$hideOn = array_merge($hideOn,$hiddenKids);
+	}
+	
+	if ( in_array($modx->documentIdentifier,$hideOn) )
+	{
+		return '';
+	}
 }
-
 
 // Initialize ------------------------------------------------------------------
 
 // Put certain parameters in arrays
-$stopIds = str_replace(' ','',$stopIds);
-$stopIds = explode(',',$stopIds);
+$stopIds       = str_replace(' ','',$stopIds);
+$stopIds       = explode(',',$stopIds);
 $linkTextField = str_replace(' ','',$linkTextField);
 $linkTextField = explode(',',$linkTextField);
 $linkDescField = str_replace(' ','',$linkDescField);
 $linkDescField = explode(',',$linkDescField);
-$ignoreIds = str_replace(' ','',$ignoreIds);
-$ignoreIds = explode(',',$ignoreIds);
+$ignoreIds     = str_replace(' ','',$ignoreIds);
+$ignoreIds     = explode(',',$ignoreIds);
 
 /* $crumbs
- * Crumb elements are: id, parent, pagetitle, longtitle, menutitle, description,
- * published, hidemenu
- */
+* Crumb elements are: id, parent, pagetitle, longtitle, menutitle, description,
+* published, hidemenu
+*/
 $crumbs = array();
 $parent = $modx->documentObject['parent'];
 $output = '';
@@ -278,13 +276,12 @@ $crumbGap = str_replace('||','=',$crumbGap);
 // Decide if current page is to be a crumb
 if ( $showCurrentCrumb )
 {
-    $crumbs[] = array(
-        'id' => $modx->documentIdentifier,
-        'parent' => $modx->documentObject['parent'],
-        'pagetitle' => $modx->documentObject['pagetitle'],
-        'longtitle' => $modx->documentObject['longtitle'],
-        'menutitle' => $modx->documentObject['menutitle'],
-        'description' => $modx->documentObject['description']);
+	$crumbs['id' ]         = $modx->documentIdentifier;
+	$crumbs['parent']      = $modx->documentObject['parent'];
+	$crumbs['pagetitle']   = $modx->documentObject['pagetitle'];
+	$crumbs['longtitle']   = $modx->documentObject['longtitle'];
+	$crumbs['menutitle']   = $modx->documentObject['menutitle'];
+	$crumbs['description'] = $modx->documentObject['description']);
 }
 
 // Intermediate crumbs ---------------------------------------------------------
@@ -294,55 +291,61 @@ if ( $showCurrentCrumb )
 $loopSafety = 0;
 while ( $parent && $parent!=$modx->config['site_start'] && $loopSafety < 1000 )
 {
-    // Get next crumb
-    $tempCrumb = $modx->getPageInfo($parent,0,"id,parent,pagetitle,longtitle,menutitle,description,published,hidemenu");
+	// Get next crumb
+	$tempCrumb = $modx->getPageInfo($parent,0,"id,parent,pagetitle,longtitle,menutitle,description,published,hidemenu");
+	
+	// Check for include conditions & add to crumbs
+	if (
+		$tempCrumb['published'] &&
+		( !$tempCrumb['hidemenu'] || !$respectHidemenu ) &&
+		!in_array($tempCrumb['id'],$ignoreIds)
+		)
+	{
+		// Add crumb
+		$crumbs['id']          = $tempCrumb['id'];
+		$crumbs['parent']      = $tempCrumb['parent'];
+		$crumbs['pagetitle']   = $tempCrumb['pagetitle'];
+		$crumbs['longtitle']   = $tempCrumb['longtitle'];
+		$crumbs['menutitle']   = $tempCrumb['menutitle'];
+		$crumbs['description'] = $tempCrumb['description'];
+	}
 
-    // Check for include conditions & add to crumbs
-    if (
-        $tempCrumb['published'] &&
-        ( !$tempCrumb['hidemenu'] || !$respectHidemenu ) &&
-        !in_array($tempCrumb['id'],$ignoreIds)
-    )
-    {
-        // Add crumb
-        $crumbs[] = array(
-        'id' => $tempCrumb['id'],
-        'parent' => $tempCrumb['parent'],
-        'pagetitle' => $tempCrumb['pagetitle'],
-        'longtitle' => $tempCrumb['longtitle'],
-        'menutitle' => $tempCrumb['menutitle'],
-        'description' => $tempCrumb['description']);
-    }
-
-    // Check stop conditions
-    if (
-        in_array($tempCrumb['id'],$stopIds) ||  // Is one of the stop IDs
-        !$tempCrumb['parent'] || // At root
-        ( !$tempCrumb['published'] && !$pathThruUnPub ) // Unpublished
-    )
-    {
-        // Halt making crumbs
-        break;
-    }
-
-    // Reset parent
-    $parent = $tempCrumb['parent'];
-
-    // Increment loop safety
-    $loopSafety++;
+	// Check stop conditions
+	if(
+		in_array($tempCrumb['id'],$stopIds)
+			||  // Is one of the stop IDs
+		!$tempCrumb['parent']
+			|| // At root
+		(!$tempCrumb['published'] && !$pathThruUnPub ) // Unpublished
+		)
+	{
+		// Halt making crumbs
+		break;
+	}
+	
+	// Reset parent
+	$parent = $tempCrumb['parent'];
+	
+	// Increment loop safety
+	$loopSafety++;
 }
 
 // Home crumb ------------------------------------------------------------------
 
-if ( $showHomeCrumb && $homeId != $modx->documentIdentifier && $homeCrumb = $modx->getPageInfo($homeId,0,"id,parent,pagetitle,longtitle,menutitle,description,published,hidemenu") )
+if(
+	$showHomeCrumb
+		&&
+	$homeId != $modx->documentIdentifier
+		&&
+	$homeCrumb = $modx->getPageInfo($homeId,0,"id,parent,pagetitle,longtitle,menutitle,description,published,hidemenu")
+	)
 {
-    $crumbs[] = array(
-    'id' => $homeCrumb['id'],
-    'parent' => $homeCrumb['parent'],
-    'pagetitle' => $homeCrumb['pagetitle'],
-    'longtitle' => $homeCrumb['longtitle'],
-    'menutitle' => $homeCrumb['menutitle'],
-    'description' => $homeCrumb['description']);
+	$crumbs['id']          = $homeCrumb['id'];
+	$crumbs['parent']      = $homeCrumb['parent'];
+	$crumbs['pagetitle']   = $homeCrumb['pagetitle'];
+	$crumbs['longtitle']   = $homeCrumb['longtitle'];
+	$crumbs['menutitle']   = $homeCrumb['menutitle'];
+	$crumbs['description'] = $homeCrumb['description'];
 }
 
 
@@ -351,103 +354,103 @@ $pretemplateCrumbs = array();
 
 foreach ( $crumbs as $c )
 {
+	// Skip if we've exceeded our crumb limit but we're waiting to get to home
+	if(count($pretemplateCrumbs) > $maxCrumbs && $c['id'] != $homeId )
+	{
+		continue;
+	}
+	
+	$text = '';
+	$title = '';
+	$pretemplateCrumb = '';
+	
+	// Determine appropriate span/link text: home link specified
+	if ( $c['id'] == $homeId && $homeCrumbTitle )
+	{
+		$text = $homeCrumbTitle;
+	}
+	else
+	// Determine appropriate span/link text: home link not specified
+	{
+		for ($i = 0; !$text && $i < count($linkTextField); $i++)
+		{
+			if ( $c[$linkTextField[$i]] )
+			{
+				$text = $c[$linkTextField[$i]];
+			}
+		}
+	}
 
-    // Skip if we've exceeded our crumb limit but we're waiting to get to home
-    if ( count($pretemplateCrumbs) > $maxCrumbs && $c['id'] != $homeId )
-    {
-        continue;
-    }
+	// Determine link/span class(es)
+	if ( $c['id'] == $homeId )
+	{
+		$crumbClass = $stylePrefix.'homeCrumb';
+	}
+	else if ( $modx->documentIdentifier == $c['id'] )
+	{
+		$crumbClass = $stylePrefix.'currentCrumb';
+	}
+	else
+	{
+		$crumbClass = $stylePrefix.'crumb';
+	}
+	
+	// Make link
+	if(
+		( $c['id'] != $modx->documentIdentifier && $showCrumbsAsLinks )
+			||
+		( $c['id'] == $modx->documentIdentifier && $currentAsLink )
+	)
+	{
+		// Determine appropriate title for link: home link specified
+		if ( $c['id'] == $homeId && $homeCrumbDescription )
+		{
+			$title = htmlspecialchars($homeCrumbDescription);
+		}
+		else
+		// Determine appropriate title for link: home link not specified
+		{
+			for ($i = 0; !$title && $i < count($linkDescField); $i++)
+			{
+				if ( $c[$linkDescField[$i]] )
+				{
+					$title = htmlspecialchars($c[$linkDescField[$i]]);
+				}
+			}
+		}
 
-    $text = '';
-    $title = '';
-    $pretemplateCrumb = '';
-
-    // Determine appropriate span/link text: home link specified
-    if ( $c['id'] == $homeId && $homeCrumbTitle )
-    {
-        $text = $homeCrumbTitle;
-    }
-    else
-    // Determine appropriate span/link text: home link not specified
-    {
-        for ($i = 0; !$text && $i < count($linkTextField); $i++)
-        {
-            if ( $c[$linkTextField[$i]] )
-            {
-                $text = $c[$linkTextField[$i]];
-            }
-        }
-    }
-
-    // Determine link/span class(es)
-    if ( $c['id'] == $homeId )
-    {
-        $crumbClass = $stylePrefix.'homeCrumb';
-    }
-    else if ( $modx->documentIdentifier == $c['id'] )
-    {
-        $crumbClass = $stylePrefix.'currentCrumb';
-    }
-    else
-    {
-        $crumbClass = $stylePrefix.'crumb';
-    }
-
-    // Make link
-    if (
-        ( $c['id'] != $modx->documentIdentifier && $showCrumbsAsLinks ) ||
-        ( $c['id'] == $modx->documentIdentifier && $currentAsLink )
-    )
-    {
-        // Determine appropriate title for link: home link specified
-        if ( $c['id'] == $homeId && $homeCrumbDescription )
-        {
-            $title = htmlspecialchars($homeCrumbDescription);
-        }
-        else
-        // Determine appropriate title for link: home link not specified
-        {
-            for ($i = 0; !$title && $i < count($linkDescField); $i++)
-            {
-                if ( $c[$linkDescField[$i]] )
-                {
-                    $title = htmlspecialchars($c[$linkDescField[$i]]);
-                }
-            }
-        }
-
-        is($c['id'] == $modx->config['site_start'])
-        {
-        	 $href = $modx->config['base_url'];
-        }
-        else $href = $modx->makeUrl($c['id']);
-        
-        $pretemplateCrumb .= '<a class="'.$crumbClass.'" href="' . $href . '" title="'.$title.'">'.$text.'</a>';
-    }
-    else
-    // Make a span instead of a link
-    {
-       $pretemplateCrumb .= '<span class="'.$crumbClass.'">'.$text.'</span>';
-    }
-
-    // Add crumb to pretemplate crumb array
-    $pretemplateCrumbs[] = $pretemplateCrumb;
-
-    // If we have hit the crumb limit
-    if ( count($pretemplateCrumbs) == $maxCrumbs )
-    {
-        if ( count($crumbs) > ($maxCrumbs + (($showHomeCrumb) ? 1 : 0)) )
-        {
-            // Add gap
-            $pretemplateCrumbs[] = '<span class="'.$stylePrefix.'hideCrumb'.'">'.$crumbGap.'</span>';
-        }
-
-        // Stop here if we're not looking for the home crumb
-        if ( !$showHomeCrumb )
-        {
-            break;
-        }
-    }
+		is($c['id'] == $modx->config['site_start'])
+		{
+			$href = $modx->config['base_url'];
+		}
+		else $href = $modx->makeUrl($c['id']);
+		
+		$pretemplateCrumb .= '<a class="'.$crumbClass.'" href="' . $href . '" title="'.$title.'">'.$text.'</a>';
+	}
+	else
+	// Make a span instead of a link
+	{
+		$pretemplateCrumb .= '<span class="'.$crumbClass.'">'.$text.'</span>';
+	}
+	
+	// Add crumb to pretemplate crumb array
+	$pretemplateCrumbs[] = $pretemplateCrumb;
+		
+	// If we have hit the crumb limit
+	if ( count($pretemplateCrumbs) == $maxCrumbs )
+	{
+		if ( count($crumbs) > ($maxCrumbs + (($showHomeCrumb) ? 1 : 0)) )
+		{
+			// Add gap
+			$pretemplateCrumbs[] = '<span class="'.$stylePrefix.'hideCrumb'.'">'.$crumbGap.'</span>';
+		}
+		
+		// Stop here if we're not looking for the home crumb
+		if ( !$showHomeCrumb )
+		{
+			break;
+		}
+	}
 }
 
 // Put in correct order for output
@@ -455,21 +458,21 @@ $pretemplateCrumbs = array_reverse($pretemplateCrumbs);
 
 // Wrap first/last spans
 $pretemplateCrumbs[0] = str_replace(
-    array('[+firstCrumbClass+]','[+firstCrumbSpanA+]'),
-    array($stylePrefix.'firstCrumb',$pretemplateCrumbs[0]),
-    $tpl['firstCrumbWrapper']
+	array('[+firstCrumbClass+]','[+firstCrumbSpanA+]'),
+	array($stylePrefix.'firstCrumb',$pretemplateCrumbs[0]),
+	$tpl['firstCrumbWrapper']
 );
 $pretemplateCrumbs[(count($pretemplateCrumbs)-1)] = str_replace(
-    array('[+lastCrumbClass+]','[+lastCrumbSpanA+]'),
-    array($stylePrefix.'lastCrumb',$pretemplateCrumbs[(count($pretemplateCrumbs)-1)]),
-    $tpl['lastCrumbWrapper']
+	array('[+lastCrumbClass+]','[+lastCrumbSpanA+]'),
+	array($stylePrefix.'lastCrumb',$pretemplateCrumbs[(count($pretemplateCrumbs)-1)]),
+	$tpl['lastCrumbWrapper']
 );
 
 // Insert crumbs into crumb template
 $processedCrumbs = array();
 foreach ( $pretemplateCrumbs as $pc )
 {
-    $processedCrumbs[] = str_replace('[+crumb+]',$pc,$tpl['crumb']);
+	$processedCrumbs[] = str_replace('[+crumb+]',$pc,$tpl['crumb']);
 }
 
 // Combine crumbs together into one string with separator
@@ -477,10 +480,10 @@ $processedCrumbs = implode($tpl['separator'],$processedCrumbs);
 
 // Put crumbs into crumb container template
 $container = str_replace(
-    array('[+crumbBoxClass+]','[+crumbs+]'),
-    array($stylePrefix.'crumbBox',$processedCrumbs),
-    $tpl['crumbContainer']
-    );
+	array('[+crumbBoxClass+]','[+crumbs+]'),
+	array($stylePrefix.'crumbBox',$processedCrumbs),
+	$tpl['crumbContainer']
+);
 
 // Return crumbs
 return $container;
@@ -495,22 +498,18 @@ function get_default_tpl($templateSet)
 		case 'defaultlist':
 		case 'list':
 		case 'li':
-		{
 			$tpl['crumb']             = '<li>[+crumb+]</li>';
 			$tpl['separator']         = '';
 			$tpl['crumbContainer']    = '<ul class="[+crumbBoxClass+]">[+crumbs+]</ul>';
 			$tpl['firstCrumbWrapper'] = '<span class="[+firstCrumbClass+]">[+firstCrumbSpanA+]</span>';
 			$tpl['lastCrumbWrapper']  = '<span class="[+lastCrumbClass+]">[+lastCrumbSpanA+]</span>';
 			break;
-		}
 		default:
-		{
 			$tpl['crumb']             = '[+crumb+]';
 			$tpl['separator']         = ' &raquo; ';
 			$tpl['crumbContainer']    = '<span class="[+crumbBoxClass+]">[+crumbs+]</span>';
 			$tpl['firstCrumbWrapper'] = '<span class="[+firstCrumbClass+]">[+firstCrumbSpanA+]</span>';
 			$tpl['lastCrumbWrapper']  = '<span class="[+lastCrumbClass+]">[+lastCrumbSpanA+]</span>';
-		}
 	}
 	return $tpl;
 }
